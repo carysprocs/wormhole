@@ -1,5 +1,3 @@
-<p align="center"><strong>NOTE: THIS PROJECT IS A WORK-IN-PROGRESS, USE AT YOUR OWN DISCRETION</strong></p>
-
 <p align="center">
   <img width="100%" src="assets/wormhole.png" />
 </p>
@@ -7,7 +5,7 @@
 [sprocs](https://sprocs.com) wormhole is a **serverless local tunnel** that uses API Gateway (HTTP and WebSocket), Lambda, DynamoDB, and S3 to
 proxy web requests such as webhooks or API requests to your local environment for testing/development purposes.
 
-- **Easy-to-deploy**: click-through deployment wizard via AWS Amplify
+- **Easy to deploy**: click-through deployment wizard via AWS Amplify
 - **Gain visibility and control over your local proxy traffic**: keep your development requests within your own cloud infrastructure, know who has access
 - **Multiple hosts/clients**: setup unlimited custom subdomains for multiple clients (or use single API Gateway endpoint)
 - **HTTP auth support**: setup HTTP auth to protect your public endpoint
@@ -21,11 +19,56 @@ Some use cases:
 
 [![amplifybutton](https://oneclick.amplifyapp.com/button.svg)](https://console.aws.amazon.com/amplify/home#/deploy?repo=https://github.com/sprocs/wormhole)
 
-After deployment, run the client locally with your newly setup HTTP API Gateway
-endpoint (or custom subdomain) as the first argument and local http port to proxy to as the second argument:
+Follow the Amplify wizard to create a new app environment and **after deployment
+is complete**:
+
+1. Grab your new `API Gateway (http)` endpoint that was created by navigating to `Services -> API Gateway -> APIs -> wormholeApi-ENV (Wormhole Public API)` in the AWS console and copying the `Invoke URL` (your API Gateway endpoint).
+2. Run the wormhole client locally with your newly setup API Gateway endpoint (or custom subdomain if setup, see [Custom subdomains](#custom-subdomains)) as the first argument and local http port to proxy to as the second argument:
 
 ```
-AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://my-api-gateway-id.execute-api.us-east-2.amazonaws.com 3000
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://my-api-gateway-id.execute-api.us-east-2.amazonaws.com 3000 --max-ws-size 100000
+```
+
+See [sprocs/docs Deployment](https://github.com/sprocs/docs/blob/main/deployment.md) for more info about sprocs deployments.
+
+## wormhole client options
+
+```
+# Listen on a port (recommended options)
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://APIGATEWAYID.execute-api.us-east-2.amazonaws.com 3000 --max-ws-size 100000
+
+# Listen on a port with debug enabled
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://APIGATEWAYID.execute-api.us-east-2.amazonaws.com 3000 -d
+
+# Listen on a port if HTTP auth setup
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://cdunn:supersecret@APIGATEWAYID.execute-api.us-east-2.amazonaws.com 3000
+
+# Listen on a port for a custom hostname
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://wormhole1.mydomain.com 3000
+
+# Force listen on a host if another client is already connected (disconnects the other client)
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole listen https://APIGATEWAYID.execute-api.us-east-2.amazonaws.com 3000 --force
+
+# List connections
+AWS_PROFILE=my-aws-profile npx @sprocs/wormhole connections
+```
+
+### wormhole client listen options
+
+```
+listen websocket connections
+
+Arguments:
+   endpoint: HTTPS API Gateway endpoint
+   local port: local port to proxy requests against
+
+Options:
+   -l, --localhost <host>, local hostname to proxy against (default: "localhost")
+   -s, --scheme <scheme>, local scheme to proxy against (default: "http")
+   -m, --max-ws-size <maxWsSize>, maximum websocket filesize before using s3 proxy regardless of cache-control header
+   -d, --debug, output extra debugging
+   -f, --force, force delete existing client connection for host if present
+   -h, --help, display help for command
 ```
 
 ## AWS profile/credentials for wormhole client
@@ -86,6 +129,14 @@ You can setup subdomains by:
   <img width="100%" src="assets/wormhole-architecture.png" />
 </p>
 
+## AWS Services Used
+
+* API Gateway (HTTP)
+* API Gateway (WebSockets)
+* DynamoDB
+* Lambda
+* S3
+
 ## Tips
 
 * When running JS apps that serve assets via a build system (webpack based/Next.js/Create React
@@ -95,16 +146,27 @@ trying to serve the development build from localhost. The assets often have
 to websocket rate limits trying to send megabytes of data over websockets (with a 32kb max frame size) instead of using S3 to proxy.
 For example, running a `yarn build`/`yarn start` versus `yarn dev` for Next.js apps can often fix asset serving failures.
 
+* Use the `--max-ws-size/-m` listen option to limit the maximum response size that is
+attempted over websockets. Too many websocket packets in a short duration can
+trigger rate limits and reduce reliability and timeout on API gateway. S3, while
+slightly slower, is a more reliable option for response payloads > 100kb.
+
 * Wormhole is designed for lightweight/basic web app usage such as dev API requests
 for a mobile app or receiving webhooks from a third-party like Twilio.
 
-## AWS Services Used
+## HTTP Auth
 
-* API Gateway (HTTP)
-* API Gateway (WebSockets)
-* DynamoDB
-* Lambda
-* S3
+Configuration options are loaded by [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html).
+
+To enable HTTP auth, set the following Parameters (replacing the `env` with your
+own respective AWS Amplify environment ie. `devx`)
+
+`/sprocs/wormhole/ENV/BASIC_AUTH_USER`
+`/sprocs/wormhole/ENV/BASIC_AUTH_PASSWORD`
+
+* To add a new parameter, navigate to `Services -> Systems Manager -> Parameter Store -> Create Parameter`
+* Specify the path above as the `Name` and value as the `Value`
+* You may need to wait until lambda goes cold before new SSM params are loaded
 
 ## AWS pricing
 
@@ -137,7 +199,7 @@ for more info.
 
 ## About
 
-Wormhole is developed and maintained by [sprocs](https://sprocs.com). sprocs are **easy-to-deploy** and **easy-to-maintain** serverless apps for AWS.
+Wormhole is developed and maintained by [sprocs](https://sprocs.com). sprocs are **easy to deploy** and **easy to run** serverless apps for AWS.
 
 ## License & Copyright
 
