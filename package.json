@@ -11,6 +11,7 @@
     "test-ws-handler": "pushd amplify/backend/function/wormholeWsHandler/src && yarn test && popd"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.15.0",
     "jest": "^27.0.6"
   }
 }
