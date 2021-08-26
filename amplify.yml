@@ -27,7 +27,9 @@ test:
       commands:
         - npm install
         - npm install jest
-        - cd packages/wormhole && npm install
+        - cd amplify/backend/function/wormholeApiHandler/src/ && npm install && ../../../../../
+        - cd amplify/backend/function/wormholeWsHandler/src/ && npm install && ../../../../../
+        - cd packages/wormhole && npm install && cd ../../
     test:
       commands:
         - 'npm run test'
