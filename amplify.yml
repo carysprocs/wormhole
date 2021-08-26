@@ -23,6 +23,10 @@ frontend:
       - node_modules/**/*
 test:
   phases:
+    preTest:
+      commands:
+        - npm install
+        - npm install jest
     test:
       commands:
-        - 'yarn test'
+        - 'npm run test'
