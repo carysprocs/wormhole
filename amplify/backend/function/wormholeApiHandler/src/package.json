@@ -26,6 +26,7 @@
     "jest": "^27.0.6",
     "jest-dynalite": "^3.4.1",
     "@babel/preset-env": "^7.15.0",
+    "@babel/plugin-transform-runtime": "^7.15.0",
     "supertest": "^6.1.4"
   },
   "scripts": {
