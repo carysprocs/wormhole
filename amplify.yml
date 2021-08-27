@@ -25,6 +25,7 @@ test:
   phases:
     preTest:
       commands:
+        - mkdir artifacts
         - npm install
         - npm install jest
         - cd amplify/backend/function/wormholeApiHandler/src/ && npm install && cd ../../../../../
@@ -34,5 +35,5 @@ test:
       commands:
         - 'npm run test'
   artifacts:
-    baseDirectory: jest
+    baseDirectory: artifacts
     files:
